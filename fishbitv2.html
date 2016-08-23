@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link href="build/nv.d3.css" rel="stylesheet" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.2/d3.min.js" charset="utf-8"></script>
+    <script src="build/nv.d3.js"></script>
+
+    <style>
+        text {
+            font: 12px sans-serif;
+        }
+        svg {
+            display: block;
+        }
+        html, body, #chart1, svg {
+            margin: 0px;
+            padding: 0px;
+            height: 100%;
+            width: 100%;
+        }
+
+        .dashed {
+            stroke-dasharray: 5,5;
+        }
+    </style>
+</head>
+<body class='with-3d-shadow with-transitions'>
+<div style="position:absolute; top: 0; left: 0;">
+    <script>
+        var expandLegend = function() {
+            var exp = chart.legend.expanded();
+            chart.legend.expanded(!exp);
+            chart.update();
+        }
+    </script>
+</div>
+<div id="chart1"></div>
+
+<script>
+    // Wrapping in nv.addGraph allows for '0 timeout render', stores rendered charts in nv.graphs, and may do more in the future... it's NOT required
+
+    //Todo: Want to create a function that puts the different variables (pH, C, etc) into the appropriate json format for NVD3. Right now it's way off.
+    //Todo: Create separate repository on Github so I can start sharing with Zernyu
+
+    var chart;
+    var data;
+
+    var formatDate = d3.time.format("%m/%d/%Y %H:%M:%S");
+
+    d3.csv("data/data.csv", type, function(error, data) {
+        if (error) throw error;
+
+        var fishData = [
+            {
+                key: "pH",
+                values: []
+            },
+            {
+                key: "ec",
+                values: []
+            },
+            {
+                key: "tds",
+                values: []
+            },
+            {
+                key: "pss",
+                values: []
+            },
+            {
+                key: "c",
+                values: []
+            }
+        ];
+
+        var     ph = [],
+                ec = [],
+               tds = [],
+               pss = [],
+                 c = [];
+
+
+        data.forEach(function(d) {
+            ph.push({x: d.date, y: d.ph});
+            ec.push({x: d.date, y: d.ec});
+            tds.push({x: d.date, y: d.tds});
+            pss.push({x: d.date, y: d.pss});
+            c.push({x: d.date, y: d.c});
+//            console.log(d.date);
+//            d.ph = +d.ph;
+//            fishData[0].values.push(ph);
+//            d.c = +d.c;
+//            fishData[1].values.push(d);
+        });
+
+        fishData[0].values = ph;
+        fishData[1].values = ec;
+        fishData[2].values = tds;
+        fishData[3].values = pss;
+        fishData[4].values = c;
+
+        console.log(fishData);
+
+//        console.log(fishData);
+
+//        console.log(ph);
+//        console.log(ec);
+//        console.log(tds);
+//        console.log(pss);
+//        console.log(c);
+//        console.log(fishData[0].values)
+
+        nv.addGraph(function() {
+            var chart = nv.models.lineChart();
+
+            chart.options({
+                duration: 300,
+                useInteractiveGuideline: true
+            });
+
+            chart.x(function(d) {
+                return d.x;
+            });
+
+            chart.y(function(d) {
+                return d.y;
+            });
+
+            chart.xAxis
+                    .axisLabel('Date')
+                    .tickFormat(function(d){
+                        return d3.time.format("%m/%d/%Y %H:%M:%S")(new Date(d));
+                    });
+
+            chart.xScale(d3.time.scale.utc());
+
+            d3.select('#chart1').append('svg')
+                    .datum(fishData)
+                    .call(chart);
+
+            nv.utils.windowResize(chart.update);
+
+            return chart;
+        })
+
+
+
+    })
+
+    function type(d) {
+        d.date = formatDate.parse(d.date);
+        d.ph = +d.ph;
+        return d;
+    }
+
+    function getData(d) {
+        var ph;
+
+    }
+
+</script>
+</body>
+</html>
